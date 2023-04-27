@@ -28,11 +28,6 @@ def get_html() -> HTMLResponse:
    with open("index.html") as html:
        return HTMLResponse(content=html.read())
 
-
-
-
-
-
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6543)
 
