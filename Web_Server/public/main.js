@@ -21,7 +21,7 @@ function server_request(url, data={}, verb, callback) {
 
 function getLocation() {
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(showPosition);
+    return navigator.geolocation.getCurrentPosition(showPosition);
   } else {
     console.log("Geolocation is not supported by this browser.");
   }
@@ -30,20 +30,27 @@ function getLocation() {
 function showPosition(position) {
   console.log("Latitude: " + position.coords.latitude +
   " Longitude: " + position.coords.longitude);
+  return JSON.stringify({"latitude": position.coords.latitude, "longitude": position.coords.longitude})
 }
 
 
 function newUser(){
-    server_request()
+    data = getLocation()
+
+    server_request("/new_user", data, "POST", function(){
+
+    });
 }
 
 
-getLocation();
+newUser()
 
-//will make POST request to update database of USER's location
-function updateLocation(){
+// getLocation();
 
-}
+// //will make POST request to update database of USER's location
+// function updateLocation(){
 
-setInterval(updateLocation, 10000);
+// }
+
+// setInterval(updateLocation, 10000);
 
