@@ -24,8 +24,7 @@ cursor.execute("drop table if exists Users;")
 try:
    cursor.execute("""
    CREATE TABLE Users (
-       id          integer  AUTO_INCREMENT PRIMARY KEY,
-       user       VARCHAR(100) NOT NULL,
+       user       VARCHAR(100) NOT NULL PRIMARY KEY,
        location  VARCHAR(100) NOT NULL
    );
  """)
