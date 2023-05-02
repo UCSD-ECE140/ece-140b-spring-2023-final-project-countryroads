@@ -25,7 +25,8 @@ try:
    cursor.execute("""
    CREATE TABLE Users (
        user       VARCHAR(100) NOT NULL PRIMARY KEY,
-       location  VARCHAR(100) NOT NULL
+       longitude  VARCHAR(100) NOT NULL, 
+       latitude VARCHAR(100) NOT NULL
    );
  """)
 except RuntimeError as err:

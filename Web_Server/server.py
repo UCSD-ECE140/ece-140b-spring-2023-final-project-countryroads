@@ -38,26 +38,30 @@ def get_html() -> HTMLResponse:
        return HTMLResponse(content=html.read())
    
 # route to get 
-@app.post("/new_user")
+@app.post("/update_location")
 async def get_json(request: Request):
-
+    global user_number
     db =mysql.connect(user=db_user, password=db_pass, host=db_host)
     cursor = db.cursor()
-    cursor.execute("USE TechAssignment6")
+    cursor.execute("USE CountryRoads")
     tmp_dict = await request.json()
-    user_number = 0
     tmp_dict["user_num"] = user_number
     print(tmp_dict)
 
-    # query = "insert into Menu_Items (name, price) values (%s, %s)"
-    # values = []
-    # values.append(tuple(tmp_dict.values()))
-    # cursor.executemany(query, values)
-    # db.commit()
+    query = "REPLACE into Users (user, longitude, latitude) values (%s, %s, %s)"
+    values = [tmp_dict['user_num'], tmp_dict['longitude'], tmp_dict['latitude']]
+    cursor.execute(query, values)
+    db.commit()
+    return 
+
+# route to get 
+@app.post("/new_user")
+async def get_json(request: Request):
+    global user_number
+    user_number += 1
     return 
 
 if __name__ == "__main__":
-    print("here")
     uvicorn.run(app, host="0.0.0.0", port=6543)
 
 

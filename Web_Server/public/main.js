@@ -32,7 +32,7 @@ function updateLocation() {
     };
   });
   if(user_location){
-    server_request("/new_user", user_location, "POST", function(){
+    server_request("/update_location", user_location, "POST", function(){
 
     });
   }
@@ -40,7 +40,7 @@ function updateLocation() {
 
 updateLocation();
 // update location every 10 seconds
-setInterval(updateLocation, 30000);
+setInterval(updateLocation, 10000);
 
 
 
