@@ -81,15 +81,15 @@ def insert_dummy():
 
    query = "INSERT INTO Users (longitude, latitude) VALUES (%s, %s)"
    values = [(str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
-             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
+             (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5))),
              (str(random.uniform(115, 119)), str(random.uniform(30.5, 34.5)))]
    cursor.executemany(query, values)
    db.commit()
@@ -120,3 +120,5 @@ def delete_dummy():
    cursor.executemany(query, values)
    db.commit()
    return
+
+insert_dummy()
