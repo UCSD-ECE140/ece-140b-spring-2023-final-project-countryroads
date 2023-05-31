@@ -20,13 +20,13 @@ cursor = db.cursor()
 cursor.execute("CREATE DATABASE if not exists CountryRoads;")
 cursor.execute("USE CountryRoads;")
 
-cursor.execute("drop table if exists Users;")
+cursor.execute("DROP table if exists Users;")
 try:
    cursor.execute("""
    CREATE TABLE Users (
-       user       VARCHAR(100) NOT NULL PRIMARY KEY,
-       longitude  VARCHAR(100) NOT NULL, 
-       latitude VARCHAR(100) NOT NULL
+       user       INTEGER        NOT NULL  AUTO_INCREMENT  PRIMARY KEY,
+       longitude  VARCHAR(100)   NOT NULL, 
+       latitude   VARCHAR(100)   NOT NULL,
    );
  """)
 except RuntimeError as err:
