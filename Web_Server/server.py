@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Form, WebSocket
 from fastapi.responses import Response
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles   # Used for serving static files
@@ -14,6 +14,7 @@ from urllib.request import urlopen
 import json
 import mysql.connector as mysql
 from dotenv import load_dotenv
+import asyncio
 import time
 
 app = FastAPI()
@@ -30,6 +31,9 @@ app.mount("/public", StaticFiles(directory="public"), name="public")
 
 #count number of users
 user_number = 0
+
+# Store WebSocket connections of connected clients
+connected_clients = set()
 
 #root route
 @app.get("/", response_class=HTMLResponse)
@@ -61,6 +65,33 @@ async def get_json(request: Request):
     user_number += 1
     return 
 
+# Store WebSocket connections of connected clients
+connected_clients = set()
+
+# WebSocket endpoint to receive and broadcast audio data
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+
+    # Add the WebSocket connection to the set of connected clients
+    connected_clients.add(websocket)
+
+    try:
+        while True:
+            # Receive audio data from the client
+            data = await websocket.receive_text()
+
+            # Log the received audio data
+            print(f"Received audio data: {data}")
+
+            # Broadcast the audio data to all other connected clients
+            for client in connected_clients:
+                if client != websocket:
+                    await client.send_text(data)
+    finally:
+        # Remove the WebSocket connection when the client disconnects
+        connected_clients.remove(websocket)
+ 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6543)
 

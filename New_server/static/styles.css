@@ -1,0 +1,65 @@
+body {
+    background-color: black;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    text-align: center;
+  }
+  
+  .form-group {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  
+  .form-group input {
+    flex: 1;
+    padding: 8px;
+    color: black;
+    background-color: white;
+  }
+  
+  .form-group button {
+    padding: 8px 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .chat-log {
+    height: 300px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    background-color: white;
+    color: black;
+  }
+  
+  .message-group {
+    display: flex;
+    margin-bottom: 10px;
+  }
+  
+  .message-group input {
+    flex: 1;
+    padding: 8px;
+    color: black;
+    background-color: white;
+  }
+  
+  .message-group button {
+    padding: 8px 16px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  

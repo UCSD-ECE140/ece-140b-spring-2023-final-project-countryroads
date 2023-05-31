@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Voice Chat</title>
+    <link rel="stylesheet" type="text/css" href="static/styles.css">
+  </head>
+  <body>
+    <div class="container">
+      <h1>Voice Chat</h1>
+      <div class="form-group">
+        <input type="text" id="roomInput" placeholder="Enter Room ID" />
+        <button onclick="joinRoom()">Join Room</button>
+      </div>
+      <div>
+        <div class="chat-log" id="chatLog"></div>
+        <div class="message-group">
+          <input type="text" id="messageInput" placeholder="Enter Message" />
+          <button onclick="sendMessage()">Send</button>
+          
+        </div>
+      </div>
+    </div>
+    <button id="startButton">Start Speech Recognition</button>
+    <button id="stopButton">Stop Speech Recognition</button>
+    <script src="static/main.js"></script>
+  </body>
+</html>
