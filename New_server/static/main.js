@@ -3,7 +3,7 @@ const chatLog = document.getElementById("chatLog");
 const messageInput = document.getElementById("messageInput");
 const startButton = document.getElementById("startButton");
 const stopButton = document.getElementById("stopButton");
-const clientId = "client" + Math.floor(Math.random() * 100000);
+const clientId = Math.floor(Math.random() * 100000);
 let socket = null;
 
 startButton.addEventListener("click", startSpeechRecognition);
@@ -78,3 +78,53 @@ function logMessage(message) {
     const utterance = new SpeechSynthesisUtterance(message);
     speechSynthesis.speak(utterance);
 }
+
+//''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+// Define the 'request' function to handle interactions with the server
+function server_request(url, data={}, verb, callback) {
+    return fetch(url, {
+      credentials: 'same-origin',
+      method: verb,
+      body: JSON.stringify(data),
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(function(response) {
+      if(callback)
+        callback(response);
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// initialize variable to null
+let user_location = null; 
+
+// function to update user_location variable with current locationS
+function updateLocation() {
+  navigator.geolocation.getCurrentPosition(function(position) {
+    user_location = {
+        client_id: clientId,          
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+    };
+  });
+  if(user_location){
+    server_request("/update_location", user_location, "PUT", function(){
+
+    });
+  }
+}
+
+//code to remove user from database if tab is closed
+window.addEventListener('beforeunload', function() {
+    server_request("/delete_user", user_location, "DELETE", function(){
+
+    });
+  });
+
+updateLocation();
+// update location every 10 seconds
+setInterval(updateLocation, 10000);
