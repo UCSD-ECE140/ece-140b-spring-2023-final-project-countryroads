@@ -7,6 +7,8 @@ import mysql.connector as mysql
 from dotenv import load_dotenv
 import os
 from math import radians, sin, cos, sqrt, atan2
+import asyncio
+from bleak import BleakScanner, BleakClient
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -23,6 +25,46 @@ db_name = os.environ['MYSQL_DATABASE']
 latitude = 40.7128  # Example latitude
 longitude = -74.0060  # Example longitude
 range_km = 40000  # Example range in kilometers
+
+async def enable_notifications(client, service_uuid, characteristic_uuid):
+    await client.start_notify(characteristic_uuid, notification_handler)
+
+async def notification_handler(sender: int, data: bytearray):
+    # Handle the received notification data
+    print("Received notification data:", data.decode('ascii'))
+
+async def read_characteristic_values(service_uuid, characteristic_uuid):
+    scanner = BleakScanner()
+
+    async with scanner as scanner:
+        await scanner.start()
+        await asyncio.sleep(5)  # Scan for 5 seconds
+
+        device = "7D9589EC-E5CC-33BC-2B4A-460AB9DCAA5F"
+        async with BleakClient(device) as client:
+            try:
+                await client.connect()
+
+                # Enable notifications for the characteristic
+                await enable_notifications(client, service_uuid, characteristic_uuid)
+
+                # Keep the program running to receive notifications
+                while True:
+                    await asyncio.sleep(1)
+
+            except Exception as e:
+                print(f"Failed to read characteristic value for {device}: {str(e)}")
+                await client.disconnect()
+            finally:
+                print("Disconnecting...")
+                await client.stop_notify(characteristic_uuid)
+                await client.disconnect()
+
+async def main():
+    service_uuid = "19B10000-E8F2-537E-4F6C-D104768A1214"  # Replace with your service UUID
+    characteristic_uuid = "19B10001-E8F2-537E-4F6C-D104768A1214"  # Replace with your characteristic UUID
+
+    await read_characteristic_values(service_uuid, characteristic_uuid)
 
 @app.get("/")
 async def get():
@@ -166,3 +208,7 @@ def get_users_in_range(latitude, longitude, range_km):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=6543)
+
+# loop = asyncio.get_event_loop()
+# loop.run_until_complete(main())
+
