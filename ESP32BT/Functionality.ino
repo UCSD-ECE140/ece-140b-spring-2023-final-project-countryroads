@@ -16,6 +16,7 @@ void createBluetooth() {
     while (1);
   }
   BLE.setLocalName("CountryRoadsController");
+  BLE.setAppearance(0x06);
   BLE.setAdvertisedService(crService);
   crService.addCharacteristic(crCharacteristic);
   BLE.addService(crService);

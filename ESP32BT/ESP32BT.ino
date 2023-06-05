@@ -2,8 +2,8 @@
 
 int connection = 0;
 int advertised = 0;
-BLEService crService("19B10000-E8F2-537E-4F6C-D104768A1214");
-BLEStringCharacteristic crCharacteristic("19B10001-E8F2-537E-4F6C-D104768A1214", BLERead | BLEWrite | BLENotify, 20);
+BLEService crService("99a1f7e6-2827-4ac4-8130-c58416fdac68");
+BLEStringCharacteristic crCharacteristic("10b4b19c-d0f2-4571-9363-6c52986587df", BLERead | BLEWrite | BLENotify, 20);
 
 void setup() {
   Serial.begin(9600);
