@@ -2,8 +2,9 @@ const roomInput = document.getElementById("roomInput");
 const chatLog = document.getElementById("chatLog");
 const messageInput = document.getElementById("messageInput");
 const startButton = document.getElementById("startButton");
-const stopButton = document.getElementById("stopButton");
+const stopButton = document.getElementById("stopButton");  
 const clientId = Math.floor(Math.random() * 100000);
+console.log("CLIENT ID IS: " + clientId);
 let socket = null;
 
 startButton.addEventListener("click", startSpeechRecognition);
@@ -13,7 +14,7 @@ function joinRoom() {
   const room = roomInput.value;
 
   if (room && !socket) {
-    const url = `ws://${window.location.host}/ws/${room}/${clientId}`;
+    const url = `wss://${window.location.host}/ws/${room}/${clientId}`;
     socket = new WebSocket(url);
 
     socket.onopen = () => {
@@ -62,7 +63,6 @@ function sendMessage() {
     const message = messageInput.value;
   
     if (message && socket) {
-    //   socket.send(JSON.stringify({ message: message }));
         socket.send(message);
         messageInput.value = "";
     }
@@ -81,42 +81,50 @@ function logMessage(message) {
 
 //''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
 // Define the 'request' function to handle interactions with the server
-function server_request(url, data={}, verb, callback) {
-    return fetch(url, {
-      credentials: 'same-origin',
-      method: verb,
-      body: JSON.stringify(data),
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
+function server_request(url, data = {}, verb, callback) {
+  return fetch(url, {
+    credentials: 'same-origin',
+    method: verb,
+    body: JSON.stringify(data),
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+    .then(response => {
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new Error('Error:', response.statusText);
       }
     })
-    .then(response => response.json())
     .then(function(response) {
-      if(callback)
+      if (callback) {
         callback(response);
+      }
     })
     .catch(error => console.error('Error:', error));
 }
 
+
 // initialize variable to null
 let user_location = null; 
 
-// function to update user_location variable with current locationS
 function updateLocation() {
   navigator.geolocation.getCurrentPosition(function(position) {
     user_location = {
-        client_id: clientId,          
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
+      client_id: clientId,
+      latitude: position.coords.latitude,
+      longitude: position.coords.longitude
     };
+    if (user_location) {
+      server_request("/update_location", user_location, "PUT", function(response) {
+        console.log(user_location);
+      });
+    }
   });
-  if(user_location){
-    server_request("/update_location", user_location, "PUT", function(){
-
-    });
-  }
 }
+
 
 //code to remove user from database if tab is closed
 window.addEventListener('beforeunload', function() {
@@ -128,3 +136,5 @@ window.addEventListener('beforeunload', function() {
 updateLocation();
 // update location every 10 seconds
 setInterval(updateLocation, 10000);
+
+

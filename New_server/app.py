@@ -1,14 +1,27 @@
 # main.py
-from fastapi import FastAPI, WebSocket, Request
+from fastapi import FastAPI, WebSocket, Request, WebSocketDisconnect
+import websockets
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 import uvicorn
 import mysql.connector as mysql
 from dotenv import load_dotenv
 import os
+import json
 from math import radians, sin, cos, sqrt, atan2
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Store connected clients and room information
@@ -22,7 +35,7 @@ db_name = os.environ['MYSQL_DATABASE']
 # Example usage
 latitude = 40.7128  # Example latitude
 longitude = -74.0060  # Example longitude
-range_km = 40000  # Example range in kilometers
+range_km = 1  # Example range in kilometers
 
 @app.get("/")
 async def get():
@@ -37,22 +50,69 @@ async def websocket_endpoint(websocket: WebSocket, room: str, client_id: str):
         app.state.connections[room] = []
 
     app.state.connections[room].append({"client_id": client_id, "websocket": websocket})
+    try:
+        while True:
+            data = await websocket.receive_text()
+            await broadcast(data, room, client_id, range_km)
+    except WebSocketDisconnect:
+        print(f"WebSocket connection closed for client ID: {client_id}")
 
-    while True:
-        data = await websocket.receive_text()
-        await broadcast(data, room, client_id)
+
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    await websocket.accept()
+    try:
+        while True:
+            data = await websocket.receive_text()
+            parsed_data = json.loads(data)
+            latitude = parsed_data["latitude"]
+            longitude = parsed_data["longitude"]
+            
+            db = mysql.connect(user=db_user, password=db_pass, host=db_host)
+            cursor = db.cursor()
+            cursor.execute("USE CountryRoads")
+            query = "REPLACE INTO Users (client_id, longitude, latitude) VALUES (%s, %s, %s)"
+            cursor.execute(query, (client_id, longitude, latitude))
+            db.commit()
+    except WebSocketDisconnect:
+        print(f"WebSocket connection closed for client ID: {client_id}")
 
 
-async def broadcast(message: str, room: str, sender_id: str):
+async def broadcast(message: str, room: str, sender_id: str, range_km: float):
     print(app.state.connections)
 
     if room in app.state.connections:
+        sender_location = get_user_location(sender_id)
+        if sender_location is None:
+            print("Sender location not found")
+            return
+
+        sender_latitude, sender_longitude = sender_location
+        users_in_range = get_users_in_range(sender_latitude, sender_longitude, range_km)
+        print("USERS IN RANGE:", users_in_range)
+
         for connection in app.state.connections[room]:
+            print(connection)
             client_id = connection["client_id"]
             websocket = connection["websocket"]
-            if client_id != sender_id:
+            if client_id != sender_id and int(client_id) in users_in_range:
                 print("SENDING MESSAGE!!!!!- ", message)
                 await websocket.send_text(message)
+
+def get_user_location(client_id: str):
+    db = mysql.connect(user=db_user, password=db_pass, host=db_host)
+    cursor = db.cursor()
+    cursor.execute("USE CountryRoads")
+
+    query = "SELECT latitude, longitude FROM Users WHERE client_id = %s"
+    cursor.execute(query, (client_id,))
+    result = cursor.fetchone()
+
+    if result:
+        latitude, longitude = result
+        return latitude, longitude
+
+    return None
 
 
 @app.on_event("startup")
@@ -79,41 +139,34 @@ async def startup_event():
     db.commit()
     app.state.connections = {}
 
-# route to update user's location
 @app.put("/update_location")
-async def get_json(request: Request):
-    print("CALLING UPDATE LOCATION")
-    db =mysql.connect(user=db_user, password=db_pass, host=db_host)
+async def update_location(request: Request):
+    db = mysql.connect(user=db_user, password=db_pass, host=db_host)
     cursor = db.cursor()
     cursor.execute("USE CountryRoads")
     tmp_dict = await request.json()
-    print(tmp_dict)
-    query = "REPLACE into Users (client_id, longitude, latitude) values (%s, %s, %s)"
+    query = "REPLACE INTO Users (client_id, longitude, latitude) VALUES (%s, %s, %s)"
     values = [tmp_dict['client_id'], tmp_dict['longitude'], tmp_dict['latitude']]
     cursor.execute(query, values)
     db.commit()
-    return 
+    return {"message": "Location updated successfully"}
 
-# route to update user's location
+
 @app.delete("/delete_user")
-async def get_json(request: Request):
-    users_in_range = get_users_in_range(latitude, longitude, range_km)
-    print("USERS In RANGE: ", users_in_range)
-    print("CALLING DELETE USER")
-    db =mysql.connect(user=db_user, password=db_pass, host=db_host)
+async def delete_user(request: Request):
+    db = mysql.connect(user=db_user, password=db_pass, host=db_host)
     cursor = db.cursor()
     cursor.execute("USE CountryRoads")
     tmp_dict = await request.json()
-    print("TMP DICT: ", tmp_dict)
     query = "DELETE FROM Users WHERE client_id = %s"
     values = [tmp_dict['client_id']]
-    print("val: ", values)
     cursor.execute(query, values)
     db.commit()
-    return 
+    return {"message": "User deleted successfully"}
+
 
 def get_users_in_range(latitude, longitude, range_km):
-    db =mysql.connect(user=db_user, password=db_pass, host=db_host)
+    db = mysql.connect(user=db_user, password=db_pass, host=db_host)
     cursor = db.cursor()
     cursor.execute("USE CountryRoads")
 
@@ -124,14 +177,15 @@ def get_users_in_range(latitude, longitude, range_km):
     query = """
         SELECT client_id, latitude, longitude
         FROM Users
-        HAVING (
-            6371 * 2 * 
+        WHERE (
+            6371 *
+            2 *
             ASIN(
                 SQRT(
-                    POWER(SIN(RADIANS(%s - latitude) / 2), 2) +
+                    POWER(SIN((RADIANS(%s) - RADIANS(latitude)) / 2), 2) +
                     COS(RADIANS(latitude)) *
                     COS(RADIANS(%s)) *
-                    POWER(SIN(RADIANS(%s - longitude) / 2), 2)
+                    POWER(SIN((RADIANS(%s) - RADIANS(longitude)) / 2), 2)
                 )
             )
         ) <= %s
@@ -149,11 +203,7 @@ def get_users_in_range(latitude, longitude, range_km):
         users_in_range = []
         for row in results:
             client_id, lat, lon = row
-            users_in_range.append({
-                "client_id": client_id,
-                "latitude": lat,
-                "longitude": lon
-            })
+            users_in_range.append(client_id)
 
         return users_in_range
 
