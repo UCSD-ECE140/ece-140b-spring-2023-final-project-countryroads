@@ -178,6 +178,14 @@ function requestBluetoothDevice() {
         // This is the code you should change. Anything after the console.log you should change to do the actions needed
 
         console.log("Value changed:", decodedValue);
+        if (decodedValue == "start") {
+          startSpeechRecognition();
+        } else if (decodedValue == "stop") {
+          stopSpeechRecognition();
+        } else if (decodedValue == "turn on") {
+          roomInput.value = 1;
+          joinRoom();
+        }
       });
 
       // Start receiving notifications for value changes

@@ -26,13 +26,13 @@ void loop() {
       onBTLED();
       while (central.connected()) {
         if (digitalRead(15) == LOW) {
-          crCharacteristic.writeValue("Merge");
+          crCharacteristic.writeValue("start");
           confirmDataSent();
         } else if(digitalRead(4) == LOW){
-          crCharacteristic.writeValue("Right");
+          crCharacteristic.writeValue("stop");
           confirmDataSent();
         } else if(digitalRead(5) == LOW){
-          crCharacteristic.writeValue("Left");
+          crCharacteristic.writeValue("turn on");
           confirmDataSent();
         } else if(digitalRead(18) == LOW){
           crCharacteristic.writeValue("Forward");
