@@ -32,9 +32,6 @@ db_user = os.environ['MYSQL_USER']
 db_pass = os.environ['MYSQL_PASSWORD']
 db_name = os.environ['MYSQL_DATABASE']
 
-# Example usage
-latitude = 40.7128  # Example latitude
-longitude = -74.0060  # Example longitude
 range_km = 1  # Example range in kilometers
 
 @app.get("/")
@@ -92,7 +89,7 @@ async def broadcast(message: str, room: str, sender_id: str, range_km: float):
         print("USERS IN RANGE:", users_in_range)
 
         for connection in app.state.connections[room]:
-            print(connection)
+            # print(connection)
             client_id = connection["client_id"]
             websocket = connection["websocket"]
             if client_id != sender_id and int(client_id) in users_in_range:
@@ -166,13 +163,14 @@ async def delete_user(request: Request):
 
 
 def get_users_in_range(latitude, longitude, range_km):
+    print("LATITUDE: ", latitude)
+    print("LONGITUDE: ", longitude)
+    print("RANGE_KM: ", range_km)
     db = mysql.connect(user=db_user, password=db_pass, host=db_host)
     cursor = db.cursor()
     cursor.execute("USE CountryRoads")
 
-    # Convert range_km to meters for consistency
-    range_meters = range_km * 1000
-
+    # range_meters = 0
     # SQL query to retrieve users within the specified range
     query = """
         SELECT client_id, latitude, longitude
@@ -190,7 +188,7 @@ def get_users_in_range(latitude, longitude, range_km):
             )
         ) <= %s
     """
-    query_data = (latitude, latitude, longitude, range_meters)
+    query_data = (latitude, latitude, longitude, range_km)
 
     try:
         # Execute the query
