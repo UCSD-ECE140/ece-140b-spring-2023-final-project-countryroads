@@ -58,7 +58,6 @@ def distance_calculation():
 
    #Find the distance between the users
    for (user, longitude, latitude) in cursor:
-      #print(type(user), type(longitude))
       distance = haversine(float(longitude), float(latitude), -118.29, 32.5)
       #print("The distance between user", user, "and the dummy numbers is:", distance)
       return distance
@@ -68,7 +67,6 @@ def distance_calculation():
 #****************************************************#
 #   THROW USERS INTO A GROUP BASED ON RANDOM VALUES  #
 #****************************************************#
-
 
 import random
 def insert_dummy():
